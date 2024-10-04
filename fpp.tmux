@@ -15,6 +15,10 @@ set -Eeu -o pipefail
 #   @fpp-path
 #     - Custom path to FPP.
 #     - Default to 'fpp'.
+#   @fpp-history-limit
+#     - Whether to only use the current screen as input, or the whole pane
+#       history.
+#     - Defaults to 'screen'.
 #
 # This script has several entry points. With no arguments, it defaults to 'init'.
 # The entrypoints are defined by functions prefixed with `tmux_fpp_…`:
@@ -88,8 +92,21 @@ tmux_fpp_start() {
   # Otherwise, it's cleaned up in the "run" invocation after piping to fpp.
   trap 'rm -f "${tmpfile}"' ERR RETURN
 
+  # @fpp-history-limit determines if only the current screen is used as input,
+  # or the scrollback history of the pane is also used.
+  # Defaults to 'screen'.
+  fpp_history_limit="$(tmux show-option -gqv @fpp-history-limit)" || true
+  : "${fpp_history_limit:=screen}"
+
+  # Capture the pane contents.
+  if [ "$fpp_history_limit" = "screen" ]; then
+      content="$(tmux capture-pane -Jp)"
+  else
+      content="$(tmux capture-pane -JpS -"$fpp_history_limit")"
+  fi
+
   # Save the pane contents to the temporary file.
-  tmux capture-pane -Jp > "${tmpfile}"
+  echo "$content" > "${tmpfile}"
 
   # Create a new window, running the "tmux_fpp_internal_run" function.
   # It will run fpp and clean up the temp file.

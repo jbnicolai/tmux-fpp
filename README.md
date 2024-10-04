@@ -71,6 +71,10 @@ bind-key x run-shell '~/.tmux/plugins/tmux-fpp/fpp.tmux start paste'
 
 Put `set -g @fpp-path '~/my/path/fpp'` in `tmux.conf`.
 
+> How can I make fpp search my pane history and not just the current screen?
+
+Put `set -g @fpp-history-limit '50000'` in `tmux.conf`.
+
 ### Other goodies
 
 `tmux-fpp` works great with:
